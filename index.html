@@ -53,17 +53,18 @@
             padding: 15px; 
             font-size: 1rem; 
             border-radius: 8px; 
-            border: 1px solid rgba(255, 255, 255, 0.5); 
-            background: rgba(255, 255, 255, 0.2); 
-            color: #fff; 
+            border: 2px solid rgba(255, 255, 255, 0.7); 
+            background: rgba(255, 255, 255, 0.9); 
+            color: #333; 
             outline: none; 
             transition: all 0.2s ease; 
             font-family: 'Poppins', sans-serif; 
         }
-        #answer-input::placeholder { color: rgba(255, 255, 255, 0.6); }
+        #answer-input::placeholder { color: rgba(51, 51, 51, 0.6); }
         #answer-input:focus, .form-group select:focus { 
-            background: rgba(255, 255, 255, 0.3); 
-            border-color: rgba(255, 255, 255, 0.8); 
+            background: rgba(255, 255, 255, 0.95); 
+            border-color: #fff; 
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
         }
         #answer-input:disabled { opacity: 0.6; cursor: not-allowed; }
 
@@ -189,8 +190,9 @@
         <form id="answer-form">
             <div class="input-group">
                 <input type="text" id="answer-input" placeholder="Type your conjugation..." autocomplete="off" autofocus>
+                <!-- UPDATED: Sequential accent guide (1 through 7) -->
                 <div class="accent-guide">
-                    Accents: 1→à  2→é  3→è  4→ê  5→ë  6→î  7→ï  8→ô  9→ù  0→û  -→ç  =→ÿ
+                    Accents: 1→à  2→é  3→è  4→ê  5→î  6→ô  7→ç
                 </div>
                 <div class="button-group">
                     <button type="button" id="hint-button">Hint</button>
@@ -229,102 +231,37 @@
             }
         };
 
-        const subjects = ['je', 'tu', 'il/elle/on', 'nous', 'vous', 'ils/elles'];
+        // Fixed subject pronouns - separate for selection and conjugation
+        const subjects = ['je', 'tu', 'il', 'elle', 'on', 'nous', 'vous', 'ils', 'elles'];
+        const subjectGroups = [
+            ['je'], ['tu'], ['il', 'elle', 'on'],
+            ['nous'], ['vous'], ['ils', 'elles']
+        ];
 
-        // Conjugation functions
+        // Conjugation functions (minimized for brevity)
         function conjugatePresent(verb, subject) {
             const conjugations = {
-                'chanter': ['chante', 'chantes', 'chante', 'chantons', 'chantez', 'chantent'],
-                'jouer': ['joue', 'joues', 'joue', 'jouons', 'jouez', 'jouent'],
-                'manger': ['mange', 'manges', 'mange', 'mangeons', 'mangez', 'mangent'],
-                'commencer': ['commence', 'commences', 'commence', 'commençons', 'commencez', 'commencent'],
-                'envoyer': ['envoie', 'envoies', 'envoie', 'envoyons', 'envoyez', 'envoient'],
-                's\'appeler': ['m\'appelle', 't\'appelles', 's\'appelle', 'nous appelons', 'vous appelez', 's\'appellent'],
-                'acheter': ['achète', 'achètes', 'achète', 'achetons', 'achetez', 'achètent'],
-                'préférer': ['préfère', 'préfères', 'préfère', 'préférons', 'préférez', 'préfèrent'],
-                'finir': ['finis', 'finis', 'finit', 'finissons', 'finissez', 'finissent'],
-                'vendre': ['vends', 'vends', 'vend', 'vendons', 'vendez', 'vendent'],
-                'aller': ['vais', 'vas', 'va', 'allons', 'allez', 'vont'],
-                'avoir': ['ai', 'as', 'a', 'avons', 'avez', 'ont'],
-                'être': ['suis', 'es', 'est', 'sommes', 'êtes', 'sont'],
-                'faire': ['fais', 'fais', 'fait', 'faisons', 'faites', 'font'],
-                'venir': ['viens', 'viens', 'vient', 'venons', 'venez', 'viennent'],
-                'tenir': ['tiens', 'tiens', 'tient', 'tenons', 'tenez', 'tiennent'],
-                'mettre': ['mets', 'mets', 'met', 'mettons', 'mettez', 'mettent'],
-                'prendre': ['prends', 'prends', 'prend', 'prenons', 'prenez', 'prennent'],
-                'savoir': ['sais', 'sais', 'sait', 'savons', 'savez', 'savent'],
-                'connaître': ['connais', 'connais', 'connaît', 'connaissons', 'connaissez', 'connaissent'],
-                'dire': ['dis', 'dis', 'dit', 'disons', 'dites', 'disent'],
-                'écrire': ['écris', 'écris', 'écrit', 'écrivons', 'écrivez', 'écrivent'],
-                'lire': ['lis', 'lis', 'lit', 'lisons', 'lisez', 'lisent'],
-                'devoir': ['dois', 'dois', 'doit', 'devons', 'devez', 'doivent'],
-                'pouvoir': ['peux', 'peux', 'peut', 'pouvons', 'pouvez', 'peuvent'],
-                'vouloir': ['veux', 'veux', 'veut', 'voulons', 'voulez', 'veulent'],
-                'dormir': ['dors', 'dors', 'dort', 'dormons', 'dormez', 'dorment'],
-                'partir': ['pars', 'pars', 'part', 'partons', 'partez', 'partent'],
-                'sortir': ['sors', 'sors', 'sort', 'sortons', 'sortez', 'sortent'],
-                'voir': ['vois', 'vois', 'voit', 'voyons', 'voyez', 'voient']
+                'chanter': { 'je': 'chante', 'tu': 'chantes', 'il': 'chante', 'elle': 'chante', 'on': 'chante', 'nous': 'chantons', 'vous': 'chantez', 'ils': 'chantent', 'elles': 'chantent' },'jouer': { 'je': 'joue', 'tu': 'joues', 'il': 'joue', 'elle': 'joue', 'on': 'joue', 'nous': 'jouons', 'vous': 'jouez', 'ils': 'jouent', 'elles': 'jouent' },'manger': { 'je': 'mange', 'tu': 'manges', 'il': 'mange', 'elle': 'mange', 'on': 'mange', 'nous': 'mangeons', 'vous': 'mangez', 'ils': 'mangent', 'elles': 'mangent' },'commencer': { 'je': 'commence', 'tu': 'commences', 'il': 'commence', 'elle': 'commence', 'on': 'commence', 'nous': 'commençons', 'vous': 'commencez', 'ils': 'commencent', 'elles': 'commencent' },'envoyer': { 'je': 'envoie', 'tu': 'envoies', 'il': 'envoie', 'elle': 'envoie', 'on': 'envoie', 'nous': 'envoyons', 'vous': 'envoyez', 'ils': 'envoient', 'elles': 'envoient' },'s\'appeler': { 'je': 'm\'appelle', 'tu': 't\'appelles', 'il': 's\'appelle', 'elle': 's\'appelle', 'on': 's\'appelle', 'nous': 'nous appelons', 'vous': 'vous appelez', 'ils': 's\'appellent', 'elles': 's\'appellent' },'acheter': { 'je': 'achète', 'tu': 'achètes', 'il': 'achète', 'elle': 'achète', 'on': 'achète', 'nous': 'achetons', 'vous': 'achetez', 'ils': 'achètent', 'elles': 'achètent' },'préférer': { 'je': 'préfère', 'tu': 'préfères', 'il': 'préfère', 'elle': 'préfère', 'on': 'préfère', 'nous': 'préférons', 'vous': 'préférez', 'ils': 'préfèrent', 'elles': 'préfèrent' },'finir': { 'je': 'finis', 'tu': 'finis', 'il': 'finit', 'elle': 'finit', 'on': 'finit', 'nous': 'finissons', 'vous': 'finissez', 'ils': 'finissent', 'elles': 'finissent' },'vendre': { 'je': 'vends', 'tu': 'vends', 'il': 'vend', 'elle': 'vend', 'on': 'vend', 'nous': 'vendons', 'vous': 'vendez', 'ils': 'vendent', 'elles': 'vendent' },'aller': { 'je': 'vais', 'tu': 'vas', 'il': 'va', 'elle': 'va', 'on': 'va', 'nous': 'allons', 'vous': 'allez', 'ils': 'vont', 'elles': 'vont' },'avoir': { 'je': 'ai', 'tu': 'as', 'il': 'a', 'elle': 'a', 'on': 'a', 'nous': 'avons', 'vous': 'avez', 'ils': 'ont', 'elles': 'ont' },'être': { 'je': 'suis', 'tu': 'es', 'il': 'est', 'elle': 'est', 'on': 'est', 'nous': 'sommes', 'vous': 'êtes', 'ils': 'sont', 'elles': 'sont' },'faire': { 'je': 'fais', 'tu': 'fais', 'il': 'fait', 'elle': 'fait', 'on': 'fait', 'nous': 'faisons', 'vous': 'faites', 'ils': 'font', 'elles': 'font' },'venir': { 'je': 'viens', 'tu': 'viens', 'il': 'vient', 'elle': 'vient', 'on': 'vient', 'nous': 'venons', 'vous': 'venez', 'ils': 'viennent', 'elles': 'viennent' },'tenir': { 'je': 'tiens', 'tu': 'tiens', 'il': 'tient', 'elle': 'tient', 'on': 'tient', 'nous': 'tenons', 'vous': 'tenez', 'ils': 'tiennent', 'elles': 'tiennent' },'mettre': { 'je': 'mets', 'tu': 'mets', 'il': 'met', 'elle': 'met', 'on': 'met', 'nous': 'mettons', 'vous': 'mettez', 'ils': 'mettent', 'elles': 'mettent' },'prendre': { 'je': 'prends', 'tu': 'prends', 'il': 'prend', 'elle': 'prend', 'on': 'prend', 'nous': 'prenons', 'vous': 'prenez', 'ils': 'prennent', 'elles': 'prennent' },'savoir': { 'je': 'sais', 'tu': 'sais', 'il': 'sait', 'elle': 'sait', 'on': 'sait', 'nous': 'savons', 'vous': 'savez', 'ils': 'savent', 'elles': 'savent' },'connaître': { 'je': 'connais', 'tu': 'connais', 'il': 'connaît', 'elle': 'connaît', 'on': 'connaît', 'nous': 'connaissons', 'vous': 'connaissez', 'ils': 'connaissent', 'elles': 'connaissent' },'dire': { 'je': 'dis', 'tu': 'dis', 'il': 'dit', 'elle': 'dit', 'on': 'dit', 'nous': 'disons', 'vous': 'dites', 'ils': 'disent', 'elles': 'disent' },'écrire': { 'je': 'écris', 'tu': 'écris', 'il': 'écrit', 'elle': 'écrit', 'on': 'écrit', 'nous': 'écrivons', 'vous': 'écrivez', 'ils': 'écrivent', 'elles': 'écrivent' },'lire': { 'je': 'lis', 'tu': 'lis', 'il': 'lit', 'elle': 'lit', 'on': 'lit', 'nous': 'lisons', 'vous': 'lisez', 'ils': 'lisent', 'elles': 'lisent' },'devoir': { 'je': 'dois', 'tu': 'dois', 'il': 'doit', 'elle': 'doit', 'on': 'doit', 'nous': 'devons', 'vous': 'devez', 'ils': 'doivent', 'elles': 'doivent' },'pouvoir': { 'je': 'peux', 'tu': 'peux', 'il': 'peut', 'elle': 'peut', 'on': 'peut', 'nous': 'pouvons', 'vous': 'pouvez', 'ils': 'peuvent', 'elles': 'peuvent' },'vouloir': { 'je': 'veux', 'tu': 'veux', 'il': 'veut', 'elle': 'veut', 'on': 'veut', 'nous': 'voulons', 'vous': 'voulez', 'ils': 'veulent', 'elles': 'veulent' },'dormir': { 'je': 'dors', 'tu': 'dors', 'il': 'dort', 'elle': 'dort', 'on': 'dort', 'nous': 'dormons', 'vous': 'dormez', 'ils': 'dorment', 'elles': 'dorment' },'partir': { 'je': 'pars', 'tu': 'pars', 'il': 'part', 'elle': 'part', 'on': 'part', 'nous': 'partons', 'vous': 'partez', 'ils': 'partent', 'elles': 'partent' },'sortir': { 'je': 'sors', 'tu': 'sors', 'il': 'sort', 'elle': 'sort', 'on': 'sort', 'nous': 'sortons', 'vous': 'sortez', 'ils': 'sortent', 'elles': 'sortent' },'voir': { 'je': 'vois', 'tu': 'vois', 'il': 'voit', 'elle': 'voit', 'on': 'voit', 'nous': 'voyons', 'vous': 'voyez', 'ils': 'voient', 'elles': 'voient' }
             };
-            const subjectIndex = subjects.indexOf(subject);
-            return conjugations[verb][subjectIndex];
+            return conjugations[verb] ? conjugations[verb][subject] : '';
         }
-
         function conjugatePasseCompose(verb, subject) {
             const etreVerbs = ['aller', 'venir', 'arriver', 'partir', 'sortir', 'entrer', 'rentrer', 'retourner', 'tomber', 'rester', 'monter', 'descendre', 'naître', 'mourir', 'devenir', 'revenir'];
-            const pastParticiples = {
-                'regarder': 'regardé', 'finir': 'fini', 'vendre': 'vendu', 'être': 'été', 'vouloir': 'voulu',
-                'pouvoir': 'pu', 'avoir': 'eu', 'prendre': 'pris', 'devoir': 'dû', 'faire': 'fait',
-                'mettre': 'mis', 'descendre': 'descendu', 'retourner': 'retourné', 'monter': 'monté',
-                'rester': 'resté', 'sortir': 'sorti', 'venir': 'venu', 'aller': 'allé', 'naître': 'né',
-                'devenir': 'devenu', 'entrer': 'entré', 'revenir': 'revenu', 'tomber': 'tombé',
-                'rentrer': 'rentré', 'arriver': 'arrivé', 'mourir': 'mort', 'partir': 'parti',
-                'passer': 'passé', 'nager': 'nagé', 'étudier': 'étudié', 'servir': 'servi',
-                'dire': 'dit', 'payer': 'payé', 'voir': 'vu', 'croire': 'cru', 'écrire': 'écrit', 'lire': 'lu'
-            };
-
-            const avoirConjugations = ['ai', 'as', 'a', 'avons', 'avez', 'ont'];
-            const etreConjugations = ['suis', 'es', 'est', 'sommes', 'êtes', 'sont'];
-            
-            const subjectIndex = subjects.indexOf(subject);
+            const pastParticiples = { 'regarder': 'regardé', 'finir': 'fini', 'vendre': 'vendu', 'être': 'été', 'vouloir': 'voulu', 'pouvoir': 'pu', 'avoir': 'eu', 'prendre': 'pris', 'devoir': 'dû', 'faire': 'fait', 'mettre': 'mis', 'descendre': 'descendu', 'retourner': 'retourné', 'monter': 'monté', 'rester': 'resté', 'sortir': 'sorti', 'venir': 'venu', 'aller': 'allé', 'naître': 'né', 'devenir': 'devenu', 'entrer': 'entré', 'revenir': 'revenu', 'tomber': 'tombé', 'rentrer': 'rentré', 'arriver': 'arrivé', 'mourir': 'mort', 'partir': 'parti', 'passer': 'passé', 'nager': 'nagé', 'étudier': 'étudié', 'servir': 'servi', 'dire': 'dit', 'payer': 'payé', 'voir': 'vu', 'croire': 'cru', 'écrire': 'écrit', 'lire': 'lu' };
+            const avoirConjugations = { 'je': 'ai', 'tu': 'as', 'il': 'a', 'elle': 'a', 'on': 'a', 'nous': 'avons', 'vous': 'avez', 'ils': 'ont', 'elles': 'ont' };
+            const etreConjugations = { 'je': 'suis', 'tu': 'es', 'il': 'est', 'elle': 'est', 'on': 'est', 'nous': 'sommes', 'vous': 'êtes', 'ils': 'sont', 'elles': 'sont' };
             const pastParticiple = pastParticiples[verb];
-            
-            if (etreVerbs.includes(verb)) {
-                return `${etreConjugations[subjectIndex]} ${pastParticiple}`;
-            } else {
-                return `${avoirConjugations[subjectIndex]} ${pastParticiple}`;
-            }
+            if (!pastParticiple) return '';
+            return etreVerbs.includes(verb) ? `${etreConjugations[subject]} ${pastParticiple}` : `${avoirConjugations[subject]} ${pastParticiple}`;
         }
-
         function conjugateImparfait(verb, subject) {
             const conjugations = {
-                'jouer': ['jouais', 'jouais', 'jouait', 'jouions', 'jouiez', 'jouaient'],
-                'finir': ['finissais', 'finissais', 'finissait', 'finissions', 'finissiez', 'finissaient'],
-                'grossir': ['grossissais', 'grossissais', 'grossissait', 'grossissions', 'grossissiez', 'grossissaient'],
-                'être': ['étais', 'étais', 'était', 'étions', 'étiez', 'étaient'],
-                'attendre': ['attendais', 'attendais', 'attendait', 'attendions', 'attendiez', 'attendaient'],
-                'vendre': ['vendais', 'vendais', 'vendait', 'vendions', 'vendiez', 'vendaient'],
-                'étudier': ['étudiais', 'étudiais', 'étudiait', 'étudiions', 'étudiiez', 'étudiaient'],
-                'chercher': ['cherchais', 'cherchais', 'cherchait', 'cherchions', 'cherchiez', 'cherchaient'],
-                'nager': ['nageais', 'nageais', 'nageait', 'nagions', 'nagiez', 'nageaient'],
-                'bouger': ['bougeais', 'bougeais', 'bougeait', 'bougions', 'bougiez', 'bougeaient'],
-                'placer': ['plaçais', 'plaçais', 'plaçait', 'placions', 'placiez', 'plaçaient'],
-                'faire': ['faisais', 'faisais', 'faisait', 'faisions', 'faisiez', 'faisaient'],
-                'venir': ['venais', 'venais', 'venait', 'venions', 'veniez', 'venaient'],
-                'dormir': ['dormais', 'dormais', 'dormait', 'dormions', 'dormiez', 'dormaient'],
-                'mettre': ['mettais', 'mettais', 'mettait', 'mettions', 'mettiez', 'mettaient'],
-                'voir': ['voyais', 'voyais', 'voyait', 'voyions', 'voyiez', 'voyaient'],
-                'boire': ['buvais', 'buvais', 'buvait', 'buvions', 'buviez', 'buvaient'],
-                'sortir': ['sortais', 'sortais', 'sortait', 'sortions', 'sortiez', 'sortaient'],
-                'vouloir': ['voulais', 'voulais', 'voulait', 'voulions', 'vouliez', 'voulaient'],
-                'choisir': ['choisissais', 'choisissais', 'choisissait', 'choisissions', 'choisissiez', 'choisissaient'],
-                'commencer': ['commençais', 'commençais', 'commençait', 'commencions', 'commenciez', 'commençaient']
+                'jouer': { 'je': 'jouais', 'tu': 'jouais', 'il': 'jouait', 'elle': 'jouait', 'on': 'jouait', 'nous': 'jouions', 'vous': 'jouiez', 'ils': 'jouaient', 'elles': 'jouaient' }, 'finir': { 'je': 'finissais', 'tu': 'finissais', 'il': 'finissait', 'elle': 'finissait', 'on': 'finissait', 'nous': 'finissions', 'vous': 'finissiez', 'ils': 'finissaient', 'elles': 'finissaient' }, 'grossir': { 'je': 'grossissais', 'tu': 'grossissais', 'il': 'grossissait', 'elle': 'grossissait', 'on': 'grossissait', 'nous': 'grossissions', 'vous': 'grossissiez', 'ils': 'grossissaient', 'elles': 'grossissaient' }, 'être': { 'je': 'étais', 'tu': 'étais', 'il': 'était', 'elle': 'était', 'on': 'était', 'nous': 'étions', 'vous': 'étiez', 'ils': 'étaient', 'elles': 'étaient' }, 'attendre': { 'je': 'attendais', 'tu': 'attendais', 'il': 'attendait', 'elle': 'attendait', 'on': 'attendait', 'nous': 'attendions', 'vous': 'attendiez', 'ils': 'attendaient', 'elles': 'attendaient' }, 'vendre': { 'je': 'vendais', 'tu': 'vendais', 'il': 'vendait', 'elle': 'vendait', 'on': 'vendait', 'nous': 'vendions', 'vous': 'vendiez', 'ils': 'vendaient', 'elles': 'vendaient' }, 'étudier': { 'je': 'étudiais', 'tu': 'étudiais', 'il': 'étudiait', 'elle': 'étudiait', 'on': 'étudiait', 'nous': 'étudiions', 'vous': 'étudiiez', 'ils': 'étudiaient', 'elles': 'étudiaient' }, 'chercher': { 'je': 'cherchais', 'tu': 'cherchais', 'il': 'cherchait', 'elle': 'cherchait', 'on': 'cherchait', 'nous': 'cherchions', 'vous': 'cherchiez', 'ils': 'cherchaient', 'elles': 'cherchaient' }, 'nager': { 'je': 'nageais', 'tu': 'nageais', 'il': 'nageait', 'elle': 'nageait', 'on': 'nageait', 'nous': 'nagions', 'vous': 'nagiez', 'ils': 'nageaient', 'elles': 'nageaient' }, 'bouger': { 'je': 'bougeais', 'tu': 'bougeais', 'il': 'bougeait', 'elle': 'bougeait', 'on': 'bougeait', 'nous': 'bougions', 'vous': 'bougiez', 'ils': 'bougeaient', 'elles': 'bougeaient' }, 'placer': { 'je': 'plaçais', 'tu': 'plaçais', 'il': 'plaçait', 'elle': 'plaçait', 'on': 'plaçait', 'nous': 'placions', 'vous': 'placiez', 'ils': 'plaçaient', 'elles': 'plaçaient' }, 'faire': { 'je': 'faisais', 'tu': 'faisais', 'il': 'faisait', 'elle': 'faisait', 'on': 'faisait', 'nous': 'faisions', 'vous': 'faisiez', 'ils': 'faisaient', 'elles': 'faisaient' }, 'venir': { 'je': 'venais', 'tu': 'venais', 'il': 'venait', 'elle': 'venait', 'on': 'venait', 'nous': 'venions', 'vous': 'veniez', 'ils': 'venaient', 'elles': 'venaient' }, 'dormir': { 'je': 'dormais', 'tu': 'dormais', 'il': 'dormait', 'elle': 'dormait', 'on': 'dormait', 'nous': 'dormions', 'vous': 'dormiez', 'ils': 'dorment', 'elles': 'dorment' }, 'mettre': { 'je': 'mettais', 'tu': 'mettais', 'il': 'mettait', 'elle': 'mettait', 'on': 'mettait', 'nous': 'mettions', 'vous': 'mettiez', 'ils': 'mettaient', 'elles': 'mettaient' }, 'voir': { 'je': 'voyais', 'tu': 'voyais', 'il': 'voyait', 'elle': 'voyait', 'on': 'voyait', 'nous': 'voyions', 'vous': 'voyiez', 'ils': 'voyaient', 'elles': 'voyaient' }, 'boire': { 'je': 'buvais', 'tu': 'buvais', 'il': 'buvait', 'elle': 'buvait', 'on': 'buvait', 'nous': 'buvions', 'vous': 'buviez', 'ils': 'buvaient', 'elles': 'buvaient' }, 'sortir': { 'je': 'sortais', 'tu': 'sortais', 'il': 'sortait', 'elle': 'sortait', 'on': 'sortait', 'nous': 'sortions', 'vous': 'sortiez', 'ils': 'sortaient', 'elles': 'sortaient' }, 'vouloir': { 'je': 'voulais', 'tu': 'voulais', 'il': 'voulait', 'elle': 'voulait', 'on': 'voulait', 'nous': 'voulions', 'vous': 'vouliez', 'ils': 'voulaient', 'elles': 'voulaient' }, 'choisir': { 'je': 'choisissais', 'tu': 'choisissais', 'il': 'choisissait', 'elle': 'choisissait', 'on': 'choisissait', 'nous': 'choisissions', 'vous': 'choisissiez', 'ils': 'choisissaient', 'elles': 'choisissaient' }, 'commencer': { 'je': 'commençais', 'tu': 'commençais', 'il': 'commençait', 'elle': 'commençait', 'on': 'commençait', 'nous': 'commencions', 'vous': 'commenciez', 'ils': 'commençaient', 'elles': 'commençaient' }
             };
-            const subjectIndex = subjects.indexOf(subject);
-            return conjugations[verb][subjectIndex];
+            return conjugations[verb] ? conjugations[verb][subject] : '';
         }
-
         function getCorrectConjugation(verb, subject, tense) {
-            switch(tense) {
+            switch (tense) {
                 case 'present': return conjugatePresent(verb, subject);
                 case 'passe-compose': return conjugatePasseCompose(verb, subject);
                 case 'imparfait': return conjugateImparfait(verb, subject);
@@ -354,23 +291,23 @@
         let currentTense = 'present';
         let quizQuestions = [];
         let currentQuestion = null;
-        let totalQuestions = 0;
+        let currentQuestionIndex = 0;
         let isWaitingForContinue = false;
         let wronglyAnswered = [];
+        let initialQuestionCount = 0;
+        let questionsAnsweredCorrectly = 0;
 
-        // Accent mark handling
+        // UPDATED: Sequential accent map (1 through 7)
         const accentMap = {
-            '1': 'à', '2': 'é', '3': 'è', '4': 'ê', '5': 'ë',
-            '6': 'î', '7': 'ï', '8': 'ô', '9': 'ù', '0': 'û',
-            '-': 'ç', '=': 'ÿ'
+            '1': 'à', '2': 'é', '3': 'è', '4': 'ê',
+            '5': 'î', '6': 'ô', '7': 'ç'
         };
 
         answerInput.addEventListener('keydown', function(event) {
             if (accentMap[event.key]) {
                 event.preventDefault();
                 const cursorPos = this.selectionStart;
-                const currentValue = this.value;
-                this.value = currentValue.slice(0, cursorPos) + accentMap[event.key] + currentValue.slice(cursorPos);
+                this.value = this.value.slice(0, cursorPos) + accentMap[event.key] + this.value.slice(cursorPos);
                 this.selectionStart = this.selectionEnd = cursorPos + 1;
             }
         });
@@ -378,42 +315,43 @@
         function generateQuestions(tense) {
             const data = verbData[tense];
             const questions = [];
-            
             data.verbs.forEach(verb => {
-                if (data.questionsPerVerb === 6) {
-                    // Present tense: all subjects
-                    subjects.forEach(subject => {
-                        questions.push({ verb, subject });
+                if (tense === 'present') {
+                    subjectGroups.forEach(group => {
+                        const randomSubject = group[Math.floor(Math.random() * group.length)];
+                        questions.push({ verb, subject: randomSubject });
                     });
                 } else {
-                    // Passé composé and imparfait: 2 random subjects
-                    const usedSubjects = [];
+                    const usedGroups = new Set();
                     for (let i = 0; i < data.questionsPerVerb; i++) {
-                        let randomSubject;
-                        do {
-                            randomSubject = subjects[Math.floor(Math.random() * subjects.length)];
-                        } while (usedSubjects.includes(randomSubject));
-                        usedSubjects.push(randomSubject);
+                        let randomGroupIndex;
+                        do { randomGroupIndex = Math.floor(Math.random() * subjectGroups.length); } while (usedGroups.has(randomGroupIndex));
+                        usedGroups.add(randomGroupIndex);
+                        const selectedGroup = subjectGroups[randomGroupIndex];
+                        const randomSubject = selectedGroup[Math.floor(Math.random() * selectedGroup.length)];
                         questions.push({ verb, subject: randomSubject });
                     }
                 }
             });
-            
             return questions;
+        }
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
         }
 
         function startGame(tense) {
             currentTense = tense;
-            quizQuestions = generateQuestions(tense);
-            totalQuestions = quizQuestions.length;
+            quizQuestions = shuffleArray(generateQuestions(tense));
+            currentQuestionIndex = 0;
             wronglyAnswered = [];
-            
-            // Shuffle questions
-            for (let i = quizQuestions.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [quizQuestions[i], quizQuestions[j]] = [quizQuestions[j], quizQuestions[i]];
-            }
-            
+            initialQuestionCount = quizQuestions.length;
+            questionsAnsweredCorrectly = 0;
             selectionContainer.style.display = 'none';
             completionScreen.style.display = 'none';
             quizBox.style.display = 'block';
@@ -421,11 +359,10 @@
         }
 
         function nextQuestion() {
-            if (quizQuestions.length === 0) {
+            if (questionsAnsweredCorrectly >= initialQuestionCount) {
                 endGame();
                 return;
             }
-            
             isWaitingForContinue = false;
             feedbackMessage.innerHTML = '';
             continuePrompt.style.display = 'none';
@@ -434,9 +371,10 @@
             hintButton.disabled = false;
             answerInput.value = '';
             
-            progressCounter.textContent = `${quizQuestions.length} / ${totalQuestions} questions remaining`;
+            // Progress counter uses questionsAnsweredCorrectly to stay static on incorrect answers
+            progressCounter.textContent = `Question ${questionsAnsweredCorrectly + 1} of ${initialQuestionCount}`;
             
-            currentQuestion = quizQuestions[0];
+            currentQuestion = quizQuestions[currentQuestionIndex];
             questionElement.textContent = `${currentQuestion.subject} ${currentQuestion.verb}`;
             answerInput.focus();
         }
@@ -444,31 +382,30 @@
         function checkAnswer(event) {
             event.preventDefault();
             if (isWaitingForContinue) {
-                nextQuestion();
+                continueToNext();
                 return;
             }
-            
             const userAnswer = answerInput.value.trim().toLowerCase();
             if (!userAnswer) return;
-            
             const correctAnswer = getCorrectConjugation(currentQuestion.verb, currentQuestion.subject, currentTense);
             const isCorrect = userAnswer === correctAnswer.toLowerCase();
-            
             if (isCorrect) {
+                questionsAnsweredCorrectly++;
                 feedbackMessage.innerHTML = `<span class="correct">Correct!</span>`;
-                quizQuestions.shift();
                 answerInput.disabled = true;
                 hintButton.disabled = true;
-                setTimeout(nextQuestion, 600);
+                setTimeout(continueToNext, 600);
             } else {
+                // FAILED: Push question to the end for re-quiz
+                quizQuestions.push(quizQuestions[currentQuestionIndex]);
+                
                 feedbackMessage.innerHTML = `<span class="incorrect">Incorrect. The answer is: ${correctAnswer}</span>`;
-                wronglyAnswered.push({
-                    verb: currentQuestion.verb,
-                    subject: currentQuestion.subject,
-                    correctAnswer: correctAnswer,
-                    userAnswer: userAnswer
-                });
-                quizQuestions.shift();
+                
+                // Add to review list only on the first time it's answered incorrectly
+                if (!wronglyAnswered.some(item => item.verb === currentQuestion.verb && item.subject === currentQuestion.subject)) {
+                    wronglyAnswered.push({ verb: currentQuestion.verb, subject: currentQuestion.subject, correctAnswer: correctAnswer, userAnswer: userAnswer });
+                }
+
                 isWaitingForContinue = true;
                 answerInput.disabled = true;
                 hintButton.disabled = true;
@@ -478,34 +415,40 @@
             }
         }
 
+        function continueToNext() {
+            currentQuestionIndex++;
+            nextQuestion();
+        }
+
         function showHint() {
             if (currentQuestion && !isWaitingForContinue) {
                 const correctAnswer = getCorrectConjugation(currentQuestion.verb, currentQuestion.subject, currentTense);
-                const hintLength = Math.min(2, correctAnswer.length);
-                const hint = correctAnswer.substring(0, hintLength);
-                feedbackMessage.innerHTML = `<span class="hint-message">Hint: Starts with "${hint}..."</span>`;
-                hintButton.disabled = true;
-                answerInput.focus();
+                if (correctAnswer) {
+                    const hint = correctAnswer.substring(0, Math.min(2, correctAnswer.length));
+                    feedbackMessage.innerHTML = `<span class="hint-message">Hint: Starts with "${hint}..."</span>`;
+                    hintButton.disabled = true;
+                    answerInput.focus();
+                }
             }
         }
 
         function endGame() {
             quizBox.style.display = 'none';
-            
             if (wronglyAnswered.length === 0) {
-                finalScore.textContent = `Perfect score! You didn't miss any questions.`;
+                finalScore.textContent = `Perfect score! You got all ${initialQuestionCount} questions correct.`;
                 reviewSection.style.display = 'none';
             } else {
-                finalScore.textContent = `You missed ${wronglyAnswered.length} out of ${totalQuestions} questions.`;
+                const correctCount = initialQuestionCount - wronglyAnswered.length;
+                const percentage = Math.round((correctCount / initialQuestionCount) * 100);
+                finalScore.textContent = `You correctly answered ${correctCount}/${initialQuestionCount} (${percentage}%) unique questions.`;
                 wrongAnswersList.innerHTML = '';
                 wronglyAnswered.forEach(item => {
-                    const listItem = document.createElement('li');
-                    listItem.textContent = `${item.subject} ${item.verb} → ${item.correctAnswer}`;
-                    wrongAnswersList.appendChild(listItem);
+                    const li = document.createElement('li');
+                    li.textContent = `${item.subject} ${item.verb} → ${item.correctAnswer}`;
+                    wrongAnswersList.appendChild(li);
                 });
                 reviewSection.style.display = 'block';
             }
-            
             completionScreen.style.display = 'flex';
         }
 
@@ -517,10 +460,8 @@
         // Event listeners
         startQuizForm.addEventListener('submit', function(event) {
             event.preventDefault();
-            const selectedTense = tenseSelect.value;
-            startGame(selectedTense);
+            startGame(tenseSelect.value);
         });
-
         answerForm.addEventListener('submit', checkAnswer);
         hintButton.addEventListener('click', showHint);
         restartButton.addEventListener('click', resetToSelection);
